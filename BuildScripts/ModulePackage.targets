@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="windows-1252"?>
+
+<!-- WARNING, WARNING, WARNING -->
+<!-- REMEMBER THAT IF YOU MODIFY THE TARGETS FILE YOU NEED TO CLOSE/OPEN THE PROJECT FOR THE CHANGES TO TAKE EFFECT -->
+
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <DNNFileName>$(AssemblyName)</DNNFileName>
+    <PackageName>$(AssemblyName)</PackageName>
+    <MSBuildDnnBinPath Condition="'$(MSBuildDnnBinPath)' == ''">$(MSBuildProjectDirectory)\..\..\..\bin</MSBuildDnnBinPath>
+  </PropertyGroup>
+  
+  <Import Project="MSBuild.Community.Tasks.Targets" />
+  
+  <Target Name="PackageModule" Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Version BuildType="Automatic" RevisionType="None" VersionFile="version.txt" StartDate="5/25/2013">
+      <Output TaskParameter="Major" PropertyName="Major" />
+      <Output TaskParameter="Minor" PropertyName="Minor" />
+      <Output TaskParameter="Build" PropertyName="Build" />
+      <Output TaskParameter="Revision" PropertyName="Revision" />
+    </Version>
+    <!-- Write new version to assemblyinfo.cs -->
+    <FileUpdate Files="Properties\AssemblyInfo.cs" Encoding="ASCII" Regex="AssemblyVersion\(&quot;.+&quot;\)" ReplacementText="AssemblyVersion(&quot;$(Major).$(Minor).$(Build).$(Revision)&quot;)" />
+    <FileUpdate Files="Properties\AssemblyInfo.cs" Encoding="ASCII" Regex="AssemblyFileVersion\(&quot;.+&quot;\)" ReplacementText="AssemblyFileVersion(&quot;$(Major).$(Minor).$(Build).$(Revision)&quot;)" />
+
+    <XmlUpdate Prefix="n"
+                Namespace="http://schemas.microsoft.com/developer/msbuild/2003"
+                XPath="dotnetnuke/packages/package[1]/@version"
+                XmlFileName="$(DNNFileName).dnn" Value="$(Major).$(Minor).$(Build).$(Revision)" />
+      
+    
+    <XmlRead Prefix="n"
+                    Namespace="http://schemas.microsoft.com/developer/msbuild/2003"
+                    XPath="dotnetnuke/packages/package[1]/@version"
+                    XmlFileName="$(DNNFileName).dnn">
+      <Output TaskParameter="Value" PropertyName="Version" />
+    </XmlRead>
+
+    <!-- Search DNN Manifest for other Assemblies that need to be added to the package -->
+      <XmlRead Prefix="n"
+                    Namespace="http://schemas.microsoft.com/developer/msbuild/2003"
+                    XPath="dotnetnuke/packages/package/components/component/assemblies/assembly/name"
+                    XmlFileName="$(DNNFileName).dnn">
+      <Output TaskParameter="Value" PropertyName="DLLS" />
+    </XmlRead>
+
+    <ItemGroup>
+      <SplitDLLs Include="$(DLLS.Split(';'))" />
+    </ItemGroup>
+
+
+    <!-- Files that will be added to the root of the package zips -->
+    <ItemGroup>
+      <RootFiles Include="**\Documentation\License.htm" />
+      <RootFiles Include="**\Documentation\ReleaseNotes.htm" />
+      <RootFiles Include="**\*.sqldataprovider" />
+      <RootFiles Include="$(DNNFileName).dnn" />
+    </ItemGroup>
+
+    <!-- Files and folders that will be excluded from both packages.  -->
+    <ItemGroup>
+      <DefaultExclude Include="**\.svn\**" />
+      <DefaultExclude Include="**\bin\**" />
+      <DefaultExclude Include="**\obj\**" />
+      <DefaultExclude Include="**\Release\**" />
+      <DefaultExclude Include="**\Debug\**" />
+      <DefaultExclude Include="**\Test\**" />
+      <DefaultExclude Include="**\TestResults\**" />
+      <DefaultExclude Include="**\doc\**" />
+      <DefaultExclude Include="**\www\**" />
+      <DefaultExclude Include="**\*.user" />
+      <DefaultExclude Include="**\*.suo" />
+      <DefaultExclude Include="**\*.zip" />
+      <DefaultExclude Include="**\*ReSharper.*\**" />
+      <DefaultExclude Include="**\Tests*\**" />
+      <DefaultExclude Include="**\packages\**" />
+      <DefaultExclude Include="**\install\**" />
+      <DefaultExclude Include="**\*.dnn" />
+    </ItemGroup>
+
+    <!-- Files that will be added to the install package. Note the default exclude collection on each item. -->
+    <ItemGroup>
+      <InstallInclude Include="**\*.ascx" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.asmx" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.css" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.html" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.htm" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.resx" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.aspx" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.js" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.xsl" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.xslt" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.xml" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\images\*.*" Exclude="@(DefaultExclude)" />
+      <InstallInclude Include="**\*.txt" Exclude="@(DefaultExclude);**\version.txt;"  />
+      
+    </ItemGroup>
+
+    <!-- FIles that will be added to the source package. Essentially everything but primary exclusion list. -->
+    <ItemGroup>
+      <SourceInclude Include="**\*.*" Exclude="@(DefaultExclude)"  />
+    </ItemGroup>
+            
+    
+    <!-- create the INSTALL RESOURCES.ZIP file -->
+    <Copy SourceFiles="@(InstallInclude)" DestinationFolder="$(MSBuildProjectDirectory)\ResourcesZip\%(RecursiveDir)" />
+
+    <CreateItem Include="$(MSBuildProjectDirectory)\ResourcesZip\**\*.*">
+      <Output TaskParameter="Include" ItemName="ResourcesContent" />
+    </CreateItem>
+    
+    <Zip Files="@(ResourcesContent)" WorkingDirectory="$(MSBuildProjectDirectory)\ResourcesZip" ZipFileName="Resources.zip" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Resources.zip" DestinationFolder="package/" />
+
+    <!-- Create the Install package -->
+    <Copy SourceFiles="$(MSBuildDnnBinPath)\%(SplitDLLs.Filename)%(SplitDLLs.Extension)" DestinationFolder="$(MSBuildProjectDirectory)\Package\bin"/>
+    <Copy SourceFiles="@(RootFiles)" DestinationFolder="$(MSBuildProjectDirectory)\Package" />
+
+    <CreateItem Include="$(MSBuildProjectDirectory)\Package\**\*.*">
+      <Output TaskParameter="Include" ItemName="OutputContent" />
+    </CreateItem>
+    
+    
+    <Zip Files="@(OutputContent)" WorkingDirectory="$(MSBuildProjectDirectory)\Package" ZipFileName="$(PackageName)_$(Version)_Install.zip" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\$(PackageName)_$(Version)_Install.zip" DestinationFolder="install/" />
+
+    <!-- Clean up Files -->
+    <RemoveDir Directories ="$(MSBuildProjectDirectory)\Package" />
+    <RemoveDir Directories ="$(MSBuildProjectDirectory)\ResourcesZip" />
+
+
+    <!-- create the SOURCE RESOURCES.ZIP file -->
+    <Copy SourceFiles="@(SourceInclude)" DestinationFolder="$(MSBuildProjectDirectory)\ResourcesZip\%(RecursiveDir)" />
+    
+    <CreateItem Include="$(MSBuildProjectDirectory)\ResourcesZip\**\*.*">
+      <Output TaskParameter="Include" ItemName="SourceContent" />
+    </CreateItem>
+    
+    <Zip Files="@(SourceContent)" WorkingDirectory="$(MSBuildProjectDirectory)\ResourcesZip" ZipFileName="Resources.zip" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Resources.zip" DestinationFolder="package/" />   
+
+    <!-- Create the Source package -->
+    <Copy SourceFiles="$(MSBuildDnnBinPath)\%(SplitDLLs.Filename)%(SplitDLLs.Extension)" DestinationFolder="$(MSBuildProjectDirectory)\Package\bin"/>
+    <Copy SourceFiles="@(RootFiles)" DestinationFolder="$(MSBuildProjectDirectory)\Package" />
+
+    <CreateItem Include="$(MSBuildProjectDirectory)\Package\**\*.*">
+      <Output TaskParameter="Include" ItemName="OutputSource" />
+    </CreateItem>
+
+    <Zip Files="@(OutputSource)" WorkingDirectory="$(MSBuildProjectDirectory)\Package" ZipFileName="$(PackageName)_$(Version)_Source.zip" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\$(PackageName)_$(Version)_Source.zip" DestinationFolder="install/" />
+
+    <!-- Clean up Files -->
+    <RemoveDir Directories ="$(MSBuildProjectDirectory)\Package" />
+    <RemoveDir Directories ="$(MSBuildProjectDirectory)\ResourcesZip" />
+
+    <!-- General Clean Up-->
+    <Delete Files="$(MSBuildProjectDirectory)\$(PackageName)_$(Version)_Install.zip" />
+    <Delete Files="$(MSBuildProjectDirectory)\$(PackageName)_$(Version)_Source.zip" />
+    <Delete Files="$(MSBuildProjectDirectory)\Resources.Zip" />
+    
+    
+  </Target>
+</Project>
