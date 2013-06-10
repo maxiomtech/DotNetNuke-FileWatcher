@@ -1,0 +1,12 @@
+﻿<dotnetnuke type="ResourceFile" version="5.0">
+  <files>
+    <file>
+      <path>Documentation/</path>
+      <name>License.htm</name>
+    </file>
+    <file>
+      <path>Documentation/</path>
+      <name>ReleaseNotes.htm</name>
+    </file>
+  </files>
+</dotnetnuke>

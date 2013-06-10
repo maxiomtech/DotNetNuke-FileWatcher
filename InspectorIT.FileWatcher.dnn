@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="InspectorIT.FileWatcher" type="Library" version="1.0.0.0">
+      <friendlyName>File Watcher</friendlyName>
+      <description>Monitors the files in your portals folder and instantly adds or removes them from the database. This is useful if you FTP or use explorer to copy files to your website.</description>
+      <iconFile>DesktopModules/InspectorIT/FileWatcher/images/icon.png</iconFile>
+      <owner>
+        <name>Jonathan Sheely</name>
+        <organization>InspectorIT</organization>
+        <url>http://inspectorit.com</url>
+        <email>jsheely@inspectorit.com</email>
+      </owner>
+      <license src="License.htm" />
+      <releaseNotes src="ReleaseNotes.htm" />
+      <components>
+        <component type="Assembly">
+          <assemblies>
+            <basePath>bin</basePath>
+            <assembly>
+              <name>InspectorIT.FileWatcher.dll</name>
+            </assembly>
+          </assemblies>
+        </component>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath>DesktopModules\InspectorIT\FileWatcher</basePath>
+            <resourceFile>
+              <name>Resources.zip</name>
+              <sourceFileName>Resources.zip</sourceFileName>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
