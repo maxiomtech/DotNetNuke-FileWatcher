@@ -2,7 +2,7 @@ repo_name: maxiomtech/DotNetNuke-FileWatcher
 report_id: acca10e880ea8ddb6739c5bf9968ad88
 version: 0.1
 repo_type: Public
-timestamp: '2023-12-27T19:58:24+00:00'
+timestamp: '2024-01-04T14:56:11+00:00'
 requested_by: jsheely
 provider: github
 branch: master
@@ -31,6 +31,7 @@ tools:
   category: Languages & Frameworks
   sub_category: Languages
   image_url: https://img.stackshare.io/service/1015/1200px-C_Sharp_wordmark.svg.png
+  detection_source_url: https://github.com/maxiomtech/DotNetNuke-FileWatcher
   detection_source: Repo Metadata
 - name: ".NET"
   description: A free, cross-platform, open source developer platform for building
@@ -55,4 +56,5 @@ tools:
   category: Build, Test, Deploy
   sub_category: Version Control System
   image_url: https://img.stackshare.io/service/1046/git.png
+  detection_source_url: https://github.com/maxiomtech/DotNetNuke-FileWatcher
   detection_source: Repo Metadata
